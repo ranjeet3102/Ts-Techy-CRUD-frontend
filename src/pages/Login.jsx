@@ -242,7 +242,7 @@
 // }
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import { FcGoogle } from "react-icons/fc";
 
 export default function Login() {
@@ -291,36 +291,39 @@ export default function Login() {
   };
 
   // ---- Google Login ----
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      const res = await fetch(
-        "https://ts-techy-crud-1.onrender.com/api/social/google/",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: credentialResponse.credential }),
-        }
-      );
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const res = await fetch(
+          "https://ts-techy-crud-1.onrender.com/api/social/google/",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: tokenResponse.access_token }),
+          }
+        );
 
-      if (res.ok) {
-        const data = await res.json();
+        if (res.ok) {
+          const data = await res.json();
 
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
-        localStorage.setItem("role", data.role);
+          localStorage.setItem("access", data.access);
+          localStorage.setItem("refresh", data.refresh);
+          localStorage.setItem("role", data.role);
 
-        if (data.role === "admin") {
-          navigate("/admin");
+          if (data.role === "admin") {
+            navigate("/admin");
+          } else {
+            navigate("/user");
+          }
         } else {
-          navigate("/user");
+          setError("Google login failed.");
         }
-      } else {
-        setError("Google login failed.");
+      } catch (err) {
+        setError("Google login failed: " + err.message);
       }
-    } catch (err) {
-      setError("Google login failed: " + err.message);
-    }
-  };
+    },
+    onError: () => setError("Google login failed."),
+  });
 
   return (
     <div
@@ -334,10 +337,7 @@ export default function Login() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden", // disables scroll bar
         fontFamily: "Segoe UI, Arial, sans-serif",
-        padding: 0,
-        margin: 0,
       }}
     >
       <div
@@ -396,8 +396,6 @@ export default function Login() {
               background: "#2a2745",
               color: "#fafaff",
               fontSize: "1.1rem",
-              outline: "none",
-              boxSizing: "border-box",
             }}
           />
           <input
@@ -415,8 +413,6 @@ export default function Login() {
               background: "#2a2745",
               color: "#fafaff",
               fontSize: "1.1rem",
-              outline: "none",
-              boxSizing: "border-box",
             }}
           />
 
@@ -435,12 +431,8 @@ export default function Login() {
                 ? "linear-gradient(90deg, #90cdf4, #b2f5ea)"
                 : "linear-gradient(90deg, #7f4ae8 0%, #9158e8 100%)",
               cursor: loading ? "not-allowed" : "pointer",
-              boxShadow: loading
-                ? "none"
-                : "0 6px 16px rgba(127, 74, 232, 0.25)",
+              boxShadow: "0 6px 16px rgba(127, 74, 232, 0.25)",
               opacity: loading ? 0.7 : 1,
-              transition: "background 0.2s ease",
-              boxSizing: "border-box",
             }}
           >
             {loading ? "Logging in..." : "Login"}
@@ -461,7 +453,6 @@ export default function Login() {
               fontSize: "1rem",
               fontWeight: "500",
               cursor: "pointer",
-              padding: 0,
             }}
           >
             Sign Up
@@ -479,36 +470,28 @@ export default function Login() {
 
         {/* ✅ Custom Google Login Button */}
         <div style={{ textAlign: "center" }}>
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setError("Google login failed.")}
-            useOneTap={false}
-            render={(renderProps) => (
-              <button
-                onClick={renderProps.onClick}
-                disabled={renderProps.disabled}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "10px",
-                  background: "#fff",
-                  color: "#333",
-                  fontWeight: "500",
-                  fontSize: "1rem",
-                  borderRadius: "12px",
-                  border: "1px solid #ddd",
-                  padding: "0.8rem",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                <FcGoogle size={22} />
-                Continue with Google
-              </button>
-            )}
-          />
+          <button
+            onClick={() => googleLogin()}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              background: "#fff",
+              color: "#333",
+              fontWeight: "500",
+              fontSize: "1rem",
+              borderRadius: "12px",
+              border: "1px solid #ddd",
+              padding: "0.8rem",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <FcGoogle size={22} />
+            Continue with Google
+          </button>
         </div>
       </div>
     </div>
