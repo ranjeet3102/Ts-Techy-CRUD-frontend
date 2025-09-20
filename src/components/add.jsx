@@ -272,8 +272,9 @@ export default function Add() {
       if (imageUrl) payload.image = imageUrl;
       const method = isEditing ? "PUT" : "POST";
       const url = isEditing
-        ? `https://ts-techy-crud-1.onrender.comapi/products/${editingProductId}/`
-        : "https://ts-techy-crud-1.onrender.com/api/products/";
+  ? `https://ts-techy-crud-1.onrender.com/api/products/${editingProductId}/`
+  : "https://ts-techy-crud-1.onrender.com/api/products/";
+
       const response = await fetch(url, {
         method,
         headers: {
